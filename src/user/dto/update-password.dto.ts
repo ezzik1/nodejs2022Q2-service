@@ -1,4 +1,4 @@
 export class UpdatePasswordDto {
-  readonly oldPassowrd: string;
+  readonly oldPassword: string;
   readonly newPassword: string;
 }
