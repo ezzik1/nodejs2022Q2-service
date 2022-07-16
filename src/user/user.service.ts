@@ -1,92 +1,74 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { v4, validate } from 'uuid';
+import { v4 } from 'uuid';
 import { UserDto } from './dto/user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Response } from 'express';
 
 @Injectable()
 export class UserService {
   private users = [];
 
-  getAll(res: Response) {
-    res.setHeader('Content-Type', 'application/json');
-    res.statusCode = HttpStatus.OK;
-    const users = [...this.users];
-    res.send(
-      users.map((e) => {
+  getAll() {
+    const users: UserDto[] = [...this.users];
+    return {
+      status: HttpStatus.OK,
+      data: users.map((e) => {
         delete e.password;
         return e;
       }),
-    );
+    };
   }
 
-  getById(id: string, res: Response) {
-    res.setHeader('Content-Type', 'application/json');
-    if (!validate(id)) {
-      res.statusCode = HttpStatus.BAD_REQUEST;
-      res.send({ message: 'This id is not valid' });
-      return;
-    }
+  getById(id: string) {
     const user: UserDto = this.users.find((u) => u.id === id);
     if (!user) {
-      res.statusCode = HttpStatus.NOT_FOUND;
-      res.send({ message: 'This id does not exist' });
-      return;
+      return {
+        status: HttpStatus.NOT_FOUND,
+        data: { message: 'This id does not exist' },
+      };
     }
     const clearUser = { ...user };
     delete clearUser.password;
-    res.statusCode = HttpStatus.OK;
-    res.send(clearUser);
+    return {
+      status: HttpStatus.OK,
+      data: clearUser,
+    };
   }
 
-  create(UserDto: CreateUserDto, res: Response) {
-    res.setHeader('Content-Type', 'application/json');
-    if (!UserDto.login || !UserDto.password) {
-      res.statusCode = HttpStatus.BAD_REQUEST;
-      res.send({ message: 'login and password are required fields' });
-      return;
-    }
+  create(UserDto: CreateUserDto) {
     const user: UserDto = {
       id: v4(),
       ...UserDto,
       version: 1,
-      createAt: Date.now(),
-      updateAt: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
     this.users.push(user);
     const clearUser = { ...user };
     delete clearUser.password;
 
-    res.statusCode = HttpStatus.OK;
-    res.send(clearUser);
+    return {
+      status: HttpStatus.CREATED,
+      data: clearUser,
+    };
   }
 
-  update(id: string, UserDto: UpdatePasswordDto, res: Response) {
-    res.setHeader('Content-Type', 'application/json');
-    if (!validate(id)) {
-      res.statusCode = HttpStatus.BAD_REQUEST;
-      res.send({ message: 'This id is not valid' });
-      return;
-    }
-    if (!UserDto.oldPassword || !UserDto.newPassword) {
-      res.statusCode = HttpStatus.BAD_REQUEST;
-      res.send({ message: 'oldPassowrd and newPassword are required fields' });
-      return;
-    }
+  update(id: string, UserDto: UpdatePasswordDto) {
     const user: UserDto = this.users.find((u) => u.id === id);
     if (!user) {
-      res.statusCode = HttpStatus.NOT_FOUND;
-      res.send({ message: 'This id does not exist' });
-      return;
+      return {
+        status: HttpStatus.NOT_FOUND,
+        data: { message: 'This id does not exist' },
+      };
     }
     if (user.password !== UserDto.oldPassword) {
-      res.statusCode = HttpStatus.FORBIDDEN;
-      res.send({ message: 'oldPassword is wrong' });
-      return;
+      return {
+        status: HttpStatus.FORBIDDEN,
+        data: { message: 'oldPassword is wrong' },
+      };
     }
 
-    user.updateAt = Date.now();
+    user.updatedAt = Date.now();
     user.version = user.version + 1;
     user.password = UserDto.newPassword;
     const index = this.users.findIndex((u) => u.id === id);
@@ -94,27 +76,26 @@ export class UserService {
 
     const clearUser = { ...user };
     delete clearUser.password;
-    res.statusCode = HttpStatus.OK;
-    res.send(clearUser);
+    return {
+      status: HttpStatus.OK,
+      data: clearUser,
+    };
   }
 
-  delete(id: string, res: Response) {
-    res.setHeader('Content-Type', 'application/json');
-    if (!validate(id)) {
-      res.statusCode = HttpStatus.BAD_REQUEST;
-      res.send({ message: 'This id is not valid' });
-      return;
-    }
+  delete(id: string) {
     const user: UserDto = this.users.find((u) => u.id === id);
     if (!user) {
-      res.statusCode = HttpStatus.NOT_FOUND;
-      res.send({ message: 'This id does not exist' });
-      return;
+      return {
+        status: HttpStatus.NOT_FOUND,
+        data: { message: 'This ID does not exist' },
+      };
     }
     this.users = this.users.filter((user) => user.id !== id);
     const clearUser = { ...user };
     delete clearUser.password;
-    res.statusCode = HttpStatus.NO_CONTENT;
-    res.send(clearUser);
+    return {
+      status: HttpStatus.NO_CONTENT,
+      data: clearUser,
+    };
   }
 }

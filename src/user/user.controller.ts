@@ -3,7 +3,10 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
+  HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Res,
@@ -18,31 +21,80 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  getAll(@Res() res: Response) {
-    this.userService.getAll(res);
+  @Header('Content-Type', 'application/json')
+  getAll(@Res({ passthrough: true }) res: Response) {
+    try {
+      const { status, data } = this.userService.getAll();
+      res.status(status);
+      return data;
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: 'Internal Server Error' };
+    }
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string, @Res() res: Response) {
-    return this.userService.getById(id, res);
+  @Header('Content-Type', 'application/json')
+  getOne(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const { status, data } = this.userService.getById(id);
+      res.status(status);
+      return data;
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: 'Internal Server Error' };
+    }
   }
 
   @Post()
-  create(@Body() createUser: CreateUserDto, @Res() res: Response) {
-    return this.userService.create(createUser, res);
+  @Header('Content-Type', 'application/json')
+  create(
+    @Body() createUser: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const { status, data } = this.userService.create(createUser);
+      res.status(status);
+      return data;
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: 'Internal Server Error' };
+    }
   }
 
   @Put(':id')
+  @Header('Content-Type', 'application/json')
   update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateUser: UpdatePasswordDto,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.userService.update(id, updateUser, res);
+    try {
+      const { status, data } = this.userService.update(id, updateUser);
+      res.status(status);
+      return data;
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: 'Internal Server Error' };
+    }
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string, @Res() res: Response) {
-    return this.userService.delete(id, res);
+  @Header('Content-Type', 'application/json')
+  delete(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const { status, data } = this.userService.delete(id);
+      res.status(status);
+      return data;
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+      return { message: 'Internal Server Error' };
+    }
   }
 }
