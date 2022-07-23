@@ -1,13 +1,20 @@
-import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { ArtistService } from 'src/artist/artist.service';
 import { v4 } from 'uuid';
-import { TrackDto } from './dto/track.dto';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { AlbumService } from 'src/album/album.service';
+import { PrismaService } from 'src/database/database.service';
+import { Track } from '@prisma/client';
 
 @Injectable()
 export class TrackService {
-  private tracks = [];
+  constructor(private prisma: PrismaService) {}
 
   @Inject(forwardRef(() => ArtistService))
   private artistService: ArtistService;
@@ -15,162 +22,74 @@ export class TrackService {
   @Inject(forwardRef(() => AlbumService))
   private albumService: AlbumService;
 
-  getAll() {
-    const tracksTemp: TrackDto[] = [...this.tracks];
-    if (tracksTemp) {
-      const tracks = tracksTemp.map((track) => {
-        if (track.artistId) {
-          const artist = this.artistService.getById(track.artistId);
-          if (artist.status !== 200) {
-            track.artistId = null;
-          }
-        }
-        if (track.albumId) {
-          const album = this.albumService.getById(track.albumId);
-          if (album.status !== 200) {
-            track.albumId = null;
-          }
-        }
-        return track;
-      });
-      return {
-        status: HttpStatus.OK,
-        data: tracks,
-      };
-    }
-
-    return {
-      status: HttpStatus.OK,
-      data: tracksTemp,
-    };
+  async getAll() {
+    return await this.prisma.track.findMany();
   }
 
-  getById(id: string) {
-    const track: TrackDto = this.tracks.find((u) => u.id === id);
-    if (!track) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
+  async getById(id: string) {
+    try {
+      return await this.prisma.track.findUniqueOrThrow({ where: { id: id } });
+    } catch (error) {
+      throw new HttpException('This id does not exist', HttpStatus.NOT_FOUND);
     }
-    if (track.artistId) {
-      const artist = this.artistService.getById(track.artistId);
-      if (artist.status !== 200) {
-        track.artistId = null;
-      }
-    }
-    if (track.albumId) {
-      const album = this.albumService.getById(track.albumId);
-      if (album.status !== 200) {
-        track.albumId = null;
-      }
-    }
-    return {
-      status: HttpStatus.OK,
-      data: track,
-    };
   }
 
-  create(TrackDto: CreateTrackDto) {
-    const track: any = {
+  async create(TrackDto: CreateTrackDto) {
+    const track: Track = {
       id: v4(),
+      name: TrackDto.name,
+      artistId: null,
+      albumId: null,
+      duration: TrackDto.duration ?? null,
     };
-    track.name = TrackDto.name;
-    if (TrackDto.duration) {
-      track.duration = TrackDto.duration;
-    }
 
     if (TrackDto.artistId) {
-      const artist = this.artistService.getById(TrackDto.artistId);
-      if (artist.status === 200) {
+      try {
+        await this.artistService.getById(TrackDto.artistId);
         track.artistId = TrackDto.artistId;
-      } else {
-        return {
-          status: HttpStatus.NOT_FOUND,
-          data: { message: 'Artist ID not found' },
-        };
+      } catch (error) {
+        throw new HttpException('Artist ID not found', HttpStatus.NOT_FOUND);
       }
-    } else {
-      track.artistId = null;
     }
-
     if (TrackDto.albumId) {
-      const album = this.albumService.getById(TrackDto.albumId);
-      if (album.status === 200) {
+      try {
+        await this.albumService.getById(TrackDto.albumId);
         track.albumId = TrackDto.albumId;
-      } else {
-        return {
-          status: HttpStatus.NOT_FOUND,
-          data: { message: 'Album ID not found' },
-        };
+      } catch (error) {
+        throw new HttpException('Album ID not found', HttpStatus.NOT_FOUND);
       }
-    } else {
-      track.albumId = null;
     }
 
-    this.tracks.push(track);
-
-    return {
-      status: HttpStatus.CREATED,
-      data: track,
-    };
+    return this.prisma.track.create({ data: track });
   }
 
-  update(id: string, TrackDto: CreateTrackDto) {
-    const track: TrackDto | any = this.tracks.find((u) => u.id === id);
-    if (!track) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
-    }
+  async update(id: string, TrackDto: CreateTrackDto) {
+    const track: Track = await this.getById(id);
     if (TrackDto.duration) {
       track.duration = TrackDto.duration;
     }
     if (TrackDto.artistId) {
-      const artist = this.artistService.getById(TrackDto.artistId);
-      if (artist.status === 200) {
-        track.artist = TrackDto.artistId;
-      } else {
-        return {
-          status: HttpStatus.NOT_FOUND,
-          data: { message: 'Artist ID not found' },
-        };
+      try {
+        await this.artistService.getById(TrackDto.artistId);
+        track.artistId = TrackDto.artistId;
+      } catch (error) {
+        throw new HttpException('Artist ID not found', HttpStatus.NOT_FOUND);
       }
     }
-
     if (TrackDto.albumId) {
-      const album = this.artistService.getById(TrackDto.albumId);
-      if (album.status === 200) {
-        track.artist = TrackDto.albumId;
-      } else {
-        return {
-          status: HttpStatus.NOT_FOUND,
-          data: { message: 'Artist ID not found' },
-        };
+      try {
+        await this.albumService.getById(TrackDto.albumId);
+        track.albumId = TrackDto.albumId;
+      } catch (error) {
+        throw new HttpException('Album ID not found', HttpStatus.NOT_FOUND);
       }
     }
 
-    const index = this.tracks.findIndex((u) => u.id === id);
-    this.tracks[index] = track;
-    return {
-      status: HttpStatus.OK,
-      data: track,
-    };
+    return this.prisma.track.update({ where: { id: id }, data: track });
   }
 
-  delete(id: string) {
-    const track: TrackDto = this.tracks.find((u) => u.id === id);
-    if (!track) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
-    }
-    this.tracks = this.tracks.filter((user) => user.id !== id);
-    return {
-      status: HttpStatus.NO_CONTENT,
-      data: track,
-    };
+  async delete(id: string) {
+    await this.getById(id);
+    return this.prisma.track.delete({ where: { id: id } });
   }
 }
