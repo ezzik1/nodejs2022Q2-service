@@ -1,81 +1,49 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Artist } from '@prisma/client';
+import { PrismaService } from 'src/database/database.service';
 import { v4 } from 'uuid';
-import { ArtistDto } from './dto/artist.dto';
 import { CreateArtistDto } from './dto/create-artist.dto';
 
 @Injectable()
 export class ArtistService {
-  private artists = [];
+  constructor(private prisma: PrismaService) {}
 
-  getAll() {
-    const artists: ArtistDto[] = [...this.artists];
-    return {
-      status: HttpStatus.OK,
-      data: artists,
-    };
+  async getAll() {
+    return await this.prisma.artist.findMany();
   }
 
-  getById(id: string) {
-    const artist: ArtistDto = this.artists.find((u) => u.id === id);
-    if (!artist) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
+  async getById(id: string) {
+    try {
+      return await this.prisma.artist.findUniqueOrThrow({ where: { id: id } });
+    } catch (error) {
+      throw new HttpException('This id does not exist', HttpStatus.NOT_FOUND);
     }
-    return {
-      status: HttpStatus.OK,
-      data: artist,
-    };
   }
 
-  create(ArtistDto: CreateArtistDto) {
-    const artist: ArtistDto = {
+  async create(ArtistDto: CreateArtistDto) {
+    const artist: Artist = {
       id: v4(),
-      ...ArtistDto,
+      name: ArtistDto.name,
+      grammy: ArtistDto.grammy ?? false,
     };
-    this.artists.push(artist);
+    await this.prisma.artist.create({ data: artist });
 
-    return {
-      status: HttpStatus.CREATED,
-      data: artist,
-    };
+    return artist;
   }
 
-  update(id: string, ArtistDto: CreateArtistDto) {
-    const artist: ArtistDto = this.artists.find((u) => u.id === id);
-    if (!artist) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
-    }
+  async update(id: string, ArtistDto: CreateArtistDto) {
+    const artist: Artist = await this.getById(id);
     if (ArtistDto.grammy !== undefined) {
       artist.grammy = ArtistDto.grammy;
     }
     if (ArtistDto.name) {
       artist.name = ArtistDto.name;
     }
-    const index = this.artists.findIndex((u) => u.id === id);
-    this.artists[index] = artist;
-    return {
-      status: HttpStatus.OK,
-      data: artist,
-    };
+    return this.prisma.artist.update({ where: { id: id }, data: artist });
   }
 
-  delete(id: string) {
-    const artist: ArtistDto = this.artists.find((u) => u.id === id);
-    if (!artist) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        data: { message: 'This id does not exist' },
-      };
-    }
-    this.artists = this.artists.filter((a) => a.id !== id);
-    return {
-      status: HttpStatus.NO_CONTENT,
-      data: artist,
-    };
+  async delete(id: string) {
+    await this.getById(id);
+    return this.prisma.artist.delete({ where: { id: id } });
   }
 }
