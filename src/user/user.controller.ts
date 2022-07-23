@@ -4,14 +4,13 @@ import {
   Delete,
   Get,
   Header,
+  HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
-  Res,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UserService } from './user.service';
@@ -22,79 +21,39 @@ export class UserController {
 
   @Get()
   @Header('Content-Type', 'application/json')
-  getAll(@Res({ passthrough: true }) res: Response) {
-    try {
-      const { status, data } = this.userService.getAll();
-      res.status(status);
-      return data;
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-      return { message: 'Internal Server Error' };
-    }
+  @HttpCode(HttpStatus.OK)
+  async getAll() {
+    return await this.userService.getAll();
   }
 
   @Get(':id')
   @Header('Content-Type', 'application/json')
-  getOne(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    try {
-      const { status, data } = this.userService.getById(id);
-      res.status(status);
-      return data;
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-      return { message: 'Internal Server Error' };
-    }
+  @HttpCode(HttpStatus.OK)
+  async getOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return await this.userService.getById(id);
   }
 
   @Post()
   @Header('Content-Type', 'application/json')
-  create(
-    @Body() createUser: CreateUserDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    try {
-      const { status, data } = this.userService.create(createUser);
-      res.status(status);
-      return data;
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-      return { message: 'Internal Server Error' };
-    }
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() createUser: CreateUserDto) {
+    return await this.userService.create(createUser);
   }
 
   @Put(':id')
   @Header('Content-Type', 'application/json')
-  update(
+  @HttpCode(HttpStatus.OK)
+  async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateUser: UpdatePasswordDto,
-    @Res({ passthrough: true }) res: Response,
   ) {
-    try {
-      const { status, data } = this.userService.update(id, updateUser);
-      res.status(status);
-      return data;
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-      return { message: 'Internal Server Error' };
-    }
+    return await this.userService.update(id, updateUser);
   }
 
   @Delete(':id')
   @Header('Content-Type', 'application/json')
-  delete(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    try {
-      const { status, data } = this.userService.delete(id);
-      res.status(status);
-      return data;
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR);
-      return { message: 'Internal Server Error' };
-    }
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return await this.userService.delete(id);
   }
 }
