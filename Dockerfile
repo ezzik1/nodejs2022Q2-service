@@ -2,15 +2,15 @@ FROM node:16.16-alpine3.16
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package*.json .
 
-RUN npm ci
+RUN npm install
 
 COPY . .
 
-RUN npm run build
+EXPOSE ${PORT}
 
-RUN npm prune --production
+CMD ["npm", "run", "start:dev"]
 
 
 
