@@ -1,4 +1,4 @@
-import { IsArray, IsOptional } from 'class-validator';
+import { IsArray, IsOptional } from '@nestjs/class-validator';
 import { AlbumDto } from 'src/album/dto/album.dto';
 import { ArtistDto } from 'src/artist/dto/artist.dto';
 import { TrackDto } from 'src/track/dto/track.dto';
