@@ -1,20 +1,29 @@
 services:
   api:
-    build: .
-    image: ezzik1-nodejs2022q2-service
+    container_name: api
+    build:  
+      context: .
+      dockerfile: ./Dockerfile
     env_file:
     - .env
-    command: npm run start:prod
-    restart: always
+    restart: unless-stopped
     volumes:
-      - .:/user/src/app
+      - .:/api/
+      - /api/node_modules
     ports:
       - ${PORT}:${PORT}
+    environment:
+      - PORT=${PORT}
     depends_on:
       - postgres
+    networks:
+      - app-network
   postgres:
-    image: postgres:14.4-alpine3.16
-    restart: always
+    container_name: postgres
+    build: 
+      context: .
+      dockerfile: ./database/Dockerfile
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -23,6 +32,11 @@ services:
       - ${DB_PORT}:${DB_PORT}
     volumes:
       - docker-nest-postgres:/var/lib/postgresql/data
+    networks:
+      - app-network
 
 volumes:
   docker-nest-postgres:
+networks:
+    app-network:
+        driver: bridge 

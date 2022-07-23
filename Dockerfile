@@ -1,8 +1,8 @@
-FROM node:16.16-alpine3.16
+FROM node:16.16-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /api
 
-COPY package*.json .
+COPY package*.json ./
 
 RUN npm install
 
