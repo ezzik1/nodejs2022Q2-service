@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    image: nodejs2022q2-service
+    image: ezzik1-nodejs2022q2-service
     env_file:
     - .env
     command: npm run start:prod
