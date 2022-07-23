@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    image: nodejs2022q2-service
+    env_file:
+    - .env
+    command: npm run start:prod
+    restart: always
+    volumes:
+      - .:/user/src/app
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:14.4-alpine3.16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - docker-nest-postgres:/var/lib/postgresql/data
+
+volumes:
+  docker-nest-postgres:
