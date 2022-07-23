@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+RUN npm run prisma:generate
+
 EXPOSE ${PORT}
 
 CMD ["npm", "run", "start:dev"]
