@@ -29,7 +29,6 @@ export class AlbumController {
   @Header('Content-Type', 'application/json')
   @HttpCode(HttpStatus.OK)
   async getOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    console.log('get', id);
     return await this.albumService.getById(id);
   }
 
@@ -47,7 +46,6 @@ export class AlbumController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateArtist: CreateAlbumDto,
   ) {
-    console.log('update', id);
     return await this.albumService.update(id, updateArtist);
   }
 
@@ -55,7 +53,6 @@ export class AlbumController {
   @Header('Content-Type', 'application/json')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    console.log('delete', id);
     return await this.albumService.delete(id);
   }
 }

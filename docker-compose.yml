@@ -5,11 +5,11 @@ services:
       context: .
       dockerfile: ./Dockerfile
     env_file:
-    - .env
+      - .env
     restart: unless-stopped
     volumes:
-      - .:/api/
-      - /api/node_modules
+      - ./:/api
+      - ignore:/app/node_modules/
     ports:
       - ${PORT}:${PORT}
     environment:
@@ -17,26 +17,28 @@ services:
     depends_on:
       - postgres
     networks:
-      - app-network
+      - postgres
   postgres:
     container_name: postgres
     build: 
       context: .
       dockerfile: ./database/Dockerfile
     restart: unless-stopped
+    hostname: postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - docker-nest-postgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     networks:
-      - app-network
+      - postgres
 
 volumes:
-  docker-nest-postgres:
+  ignore:
+  postgres:
 networks:
-    app-network:
+    postgres:
         driver: bridge 

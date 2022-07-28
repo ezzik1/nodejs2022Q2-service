@@ -4,15 +4,15 @@ WORKDIR /api
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci && npm cache clean --force
 
-COPY . .
+COPY . ./
 
-RUN npm run prisma:generate
+RUN npx prisma generate
 
-EXPOSE ${PORT}
+RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+CMD [ "node", "dist/main" ]
 
 
 
