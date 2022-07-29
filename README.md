@@ -13,20 +13,40 @@
 git clone {repository URL}
 ```
 
-## Running docker
-
-Run docker
+## Initial setup
 
 For Windows, you need to run the Linux distribution via wsl and go to the directory with the task.
 For Linux / Mac, you need to go through the command line to the directory with the task.
 
-Then type on the command line:
+Then type on the terminal:
+
+```
+npm ci
+```
+
+After install: 
+
+```
+npm run prisma:generate
+```
+
+And then:
+
+```
+npm run build
+```
+
+## Running docker
+
+Run docker
+
+Then type on the terminal:
 
 ```
 npm run docker:build
 ```
 
-## Testing
+## Database connection migrate & Testing
 
 After application running enter in the terminal:
 
@@ -44,8 +64,17 @@ docker exec -it <container name> /bin/sh
 In the container terminal, enter:
 
 ```
+npm run prisma:migrate
+```
+
+After creating the migration, you can test:
+
+```
 npm run test
 ```
+
+**In tests, one of the cases will be invalid. Sorry, I couldn't pull the changes to the test cases from the main template**
+[This fix](https://github.com/rolling-scopes-school/nodejs-course-template/commit/8472c46bdf94be7ce2fb7a9667cdb8e65e3ef3d5)
 
 ## Scan
 
@@ -58,7 +87,3 @@ npm run docker:scan:app
 ```
 npm run docker:scan:db
 ```
-
-
-**In tests, one of the cases will be invalid. Sorry, I couldn't pull the changes to the test cases from the main template**
-[This fix](https://github.com/rolling-scopes-school/nodejs-course-template/commit/8472c46bdf94be7ce2fb7a9667cdb8e65e3ef3d5)
