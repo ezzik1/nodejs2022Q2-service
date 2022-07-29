@@ -15,6 +15,7 @@
     "docker:scan:app": "docker scan nodejs2022q2-service_app",
     "docker:scan:db": "docker scan nodejs2022q2-service_postgres",
     "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
